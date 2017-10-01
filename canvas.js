@@ -1,16 +1,22 @@
 // GLOBAL
-var numberOfCars = 25;
+var numberOfCars = 20;
 var radius = 300;
 
 // CAR STATS
-var initialSpeed = 1.2;
-var maxSpeed = 1.2;
+var initialSpeed = 3;
+var maxSpeed = 3;
 var acceleration = 0.1;
 var brake = 0.2;
-var stopDistance = 10;
 var carWidth = 25;
 var carHeight = 10;
 
+// DRIVER STATS
+var brakingTime = 10; // reaction time (measured in frames)
+var minDistanceForAccelerate = 10; // minimum space (in front) required for the drive to be willing to start accelerate
+
+// MANUAL STOPPING
+var stopDistance = 10;
+var manualBrake = 0.5;
 
 /////////// INTERNAL /////////////
 var canvas = document.querySelector('canvas');
@@ -51,8 +57,12 @@ document.querySelector('.btn').addEventListener('click', function() {init()})
 var carArray = [];
 function init() {
   carArray = [];
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  // note: window.devicePixelRatio = 2 for retina, else 1
+  canvas.width = window.innerWidth*window.devicePixelRatio;
+  canvas.height = window.innerHeight*window.devicePixelRatio;
+  canvas.style.width = canvas.width/window.devicePixelRatio+'px';
+  canvas.style.height = canvas.height/window.devicePixelRatio+'px';
+  c.scale(window.devicePixelRatio,window.devicePixelRatio);
 
   // populate carArray
   for (var i=0; i<numberOfCars; i++) carArray.push(new Car(360/numberOfCars * i))
@@ -75,7 +85,6 @@ function animate() {
   c.beginPath();
   c.moveTo(mouseLineRadius[0]*Math.sin(-mouse.theta*Math.PI/180),mouseLineRadius[0]*Math.cos(mouse.theta*Math.PI/180));
   c.lineTo(mouseLineRadius[1]*Math.sin(-mouse.theta*Math.PI/180),mouseLineRadius[1]*Math.cos(mouse.theta*Math.PI/180));
-  c.lineWidth = 3;
   c.strokeStyle = 'rgba(255,0,0,0.5)';
   c.stroke();
 }
@@ -85,9 +94,9 @@ animate();
 
 // assign speed -> color
 function speedToColor(v) {
-  var r = Math.floor((1-v/maxSpeed)*155 + 100);
+  var r = Math.floor((1-v/maxSpeed)*180 + 75);
   var b = Math.floor(v/maxSpeed*155 + 100);
-  var g = 100;
+  var g = Math.floor(v/maxSpeed*50 + 75);
   return 'rgb('+r+','+g+','+b+')';
 }
 
@@ -107,18 +116,20 @@ function Car(theta) {
     c.rotate(this.theta * Math.PI / 180);
     c.fillStyle = this.color;
     c.fillRect(-this.width/2, this.radius, this.width, this.height);
+    c.strokeStyle = '#fff';
+    c.strokeRect(-this.width/2, this.radius, this.width, this.height);
     c.rotate(-this.theta * Math.PI / 180);
   }
 
   this.update = function() {
     // if car in front is too close
-    if (angleDiff(this.theta, this.nextCar.theta) < stopDistance) this.dtheta -= brake
+    if (angleDiff(this.theta, this.nextCar.theta) < brakingTime*this.dtheta) this.dtheta -= brake;
 
     // if user manually brakes car
-    else if (mouse.clicked && angleDiff(this.theta, mouse.theta) < stopDistance) this.dtheta -= brake
+    else if (mouse.clicked && angleDiff(this.theta, mouse.theta) < stopDistance) this.dtheta -= manualBrake;
 
     // if no traffic in front and car speed below maxSpeed
-    else if (this.dtheta < maxSpeed) this.dtheta += acceleration
+    else if (this.dtheta < maxSpeed && angleDiff(this.theta, this.nextCar.theta) > minDistanceForAccelerate) this.dtheta += acceleration
 
     // if car collide with car-in-front
     if (angleDiff(this.theta, this.nextCar.theta) <= this.width*180/radius/Math.PI) this.dtheta = 0
