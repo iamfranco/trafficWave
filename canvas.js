@@ -3,8 +3,8 @@ var numberOfCars = 25;
 var radius = 300;
 
 // CAR STATS
-var initialSpeed = 1.3;
-var maxSpeed = 1.3;
+var initialSpeed = 1.2;
+var maxSpeed = 1.2;
 var acceleration = 0.1;
 var brake = 0.2;
 var stopDistance = 10;
