@@ -40,13 +40,33 @@ window.addEventListener('mousemove', function(event) {
   if (mouse.x>0) mouse.theta = 360 - mouse.theta;
 })
 
+window.addEventListener('touchmove', function(event) {
+  mouse.x = event.touches[0].clientX - innerWidth/2;
+  mouse.y = event.touches[0].clientY - innerHeight/2;
+  mouse.r = Math.sqrt(mouse.x*mouse.x + mouse.y*mouse.y);
+  mouse.theta = Math.acos(mouse.y/mouse.r)/Math.PI*180;
+  if (mouse.x>0) mouse.theta = 360 - mouse.theta;
+})
+
 // get current mouse theta (angle) on MOUSEDOWN
 window.addEventListener('mousedown', function() {
   mouse.clicked = true;
 })
 
+window.addEventListener('touchstart', function(event) {
+  mouse.clicked = true;
+  mouse.x = event.touches[0].clientX - innerWidth/2;
+  mouse.y = event.touches[0].clientY - innerHeight/2;
+  mouse.r = Math.sqrt(mouse.x*mouse.x + mouse.y*mouse.y);
+  mouse.theta = Math.acos(mouse.y/mouse.r)/Math.PI*180;
+  if (mouse.x>0) mouse.theta = 360 - mouse.theta;
+})
+
 // reset mouse theta on MOUSEUP
 window.addEventListener('mouseup', function() {mouse.clicked = false})
+window.addEventListener('touchend', function() {
+  mouse.clicked = false;
+})
 
 // re-initialize on RESIZE
 window.addEventListener('resize', function() {init()})
@@ -88,9 +108,6 @@ function animate() {
   c.strokeStyle = 'rgba(255,0,0,0.5)';
   c.stroke();
 }
-
-init();
-animate();
 
 // assign speed -> color
 function speedToColor(v) {
@@ -143,3 +160,6 @@ function Car(theta) {
     this.draw();
   }
 }
+
+init();
+animate();
